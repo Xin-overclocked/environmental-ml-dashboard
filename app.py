@@ -232,7 +232,18 @@ def save_training_data(df):
         response = supabase.table('training_data').insert(records).execute()
         return True
     except Exception as e:
-        st.error(f"Error saving training data: {str(e)}")
+        error_msg = str(e)
+        if 'PGRST205' in error_msg or 'Could not find the table' in error_msg:
+            st.error(f"❌ Database table not found. Please run the SQL setup script first.")
+            st.info("""
+            **Setup Instructions:**
+            1. Go to your Supabase dashboard
+            2. Navigate to SQL Editor
+            3. Run the script from `scripts/001_create_tables.sql`
+            4. Refresh this page and try again
+            """)
+        else:
+            st.error(f"Error saving training data: {error_msg}")
         return False
 
 def save_prediction(prediction_data):
