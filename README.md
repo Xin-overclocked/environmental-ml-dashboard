@@ -9,7 +9,6 @@ A Streamlit-based dashboard for Environmental Engineering PhD research, featurin
 - **Reports & Analytics**: Comprehensive data visualization and export capabilities
 - **Dark Theme**: Futuristic design with neon accents and custom styling
 
-## Tec```markdown file="README.md"
 # Environmental Engineering Dashboard
 
 A Streamlit-based dashboard for Environmental Engineering PhD research, featuring emissions analysis, prediction modeling, and data visualization with Supabase backend.
