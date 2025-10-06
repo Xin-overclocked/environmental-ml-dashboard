@@ -174,14 +174,14 @@ def init_supabase():
         # Validate credentials
         if not url or not key:
             st.error("⚠️ Supabase credentials not found. Please configure them in Streamlit Cloud secrets or local environment variables.")
-            st.info("""
+            st.info(r"""
             **For Streamlit Cloud:**
             1. Go to App Settings → Secrets
             2. Add:
-               \`\`\`
+               ```
                SUPABASE_URL = "your_supabase_url"
                SUPABASE_ANON_KEY = "your_anon_key"
-               \`\`\`
+               ```
             
             **For Local Development:**
             Create `.streamlit/secrets.toml` with the same format.
