@@ -297,178 +297,276 @@ def predict_emissions(vehicle_data, training_df):
         'co2_saved': round(co2_saved, 1)
     }
 
+# Define the page variable for navigation
+page = "Main Dashboard"  # Default page
+
 # Sidebar Navigation
 st.sidebar.markdown("# 🌱 Environmental Dashboard")
 st.sidebar.markdown("---")
 
 # Add a new tab for the vehicle dashboard
-selected_tab = st.sidebar.radio("Select Tab", ["Main Dashboard", "Vehicle Dashboard"])
+selected_tab = st.sidebar.radio("Select Tab", ["Main Dashboard", "Vehicle Dashboard", "Training Process"])
 
 if selected_tab == "Vehicle Dashboard":
+    page = "Vehicle Dashboard"
     st.title("Vehicle Dashboard")
-    st.text_input("Vehicle model")
-    st.text_input("Vehicle Year")
-    st.text_input("Vehicle meter reading (KM)")
-    st.text_input("Vehicle CC")
-    st.text_input("Fuel used (Quality and Brand)")
+    
+    # Vehicle Details Section with validation
+    st.subheader("🚗 Vehicle Details")
+    with st.form("vehicle_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            vehicle_model = st.text_input("Vehicle Model*", key="vehicle_model_dashboard_tab")
+            vehicle_year = st.number_input("Vehicle Year*", min_value=1900, max_value=2025, value=2020, key="vehicle_year_dashboard_tab")
+            vehicle_meter = st.number_input("Vehicle Meter Reading (KM)*", min_value=0, value=0, key="vehicle_meter_dashboard_tab")
+        with col2:
+            vehicle_cc = st.number_input("Vehicle CC*", min_value=0, value=1500, key="vehicle_cc_dashboard_tab")
+            fuel_quality = st.selectbox("Fuel Quality*", ["Regular", "Premium", "Super"], key="fuel_quality_dashboard_tab")
+            fuel_brand = st.text_input("Fuel Brand*", key="fuel_brand_dashboard_tab")
 
-    st.subheader("Emissions")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.text_input("HC (ppm) - B")
-        st.text_input("CO (ppm) - B")
-        st.text_input("O2% - B")
-        st.text_input("NOx (ppm) - B")
-    with col2:
-        st.text_input("HC (ppm) - A")
-        st.text_input("CO (ppm) - A")
-        st.text_input("O2% - A")
-        st.text_input("NOx (ppm) - A")
+        # Emissions Section
+        st.subheader("📊 Emissions Measurements")
+        col3, col4 = st.columns(2)
+        with col3:
+            st.markdown("**Before Treatment**")
+            hc_b = st.number_input("HC (ppm) - Before*", min_value=0, key="hc_b_dashboard_tab")
+            co_b = st.number_input("CO (ppm) - Before*", min_value=0, key="co_b_dashboard_tab")
+            o2_b = st.number_input("O2% - Before*", min_value=0.0, max_value=100.0, key="o2_b_dashboard_tab")
+            nox_b = st.number_input("NOx (ppm) - Before*", min_value=0, key="nox_b_dashboard_tab")
+        with col4:
+            st.markdown("**After Treatment**")
+            hc_a = st.number_input("HC (ppm) - After*", min_value=0, key="hc_a_dashboard_tab")
+            co_a = st.number_input("CO (ppm) - After*", min_value=0, key="co_a_dashboard_tab")
+            o2_a = st.number_input("O2% - After*", min_value=0.0, max_value=100.0, key="o2_a_dashboard_tab")
+            nox_a = st.number_input("NOx (ppm) - After*", min_value=0, key="nox_a_dashboard_tab")
 
-    st.subheader("Performance")
-    col3, col4 = st.columns(2)
-    with col3:
-        st.text_input("AFR - B")
-        st.text_input("lambda - B")
-        st.text_input("RPM - B")
-        st.text_input("Engine Load - B")
-    with col4:
-        st.text_input("AFR - A")
-        st.text_input("lambda - A")
-        st.text_input("RPM - A")
-        st.text_input("Engine Load - A")
+        # Performance Section
+        st.subheader("⚡ Performance Metrics")
+        col5, col6 = st.columns(2)
+        with col5:
+            st.markdown("**Before Treatment**")
+            afr_b = st.number_input("AFR - Before*", min_value=0.0, key="afr_b_dashboard_tab")
+            lambda_b = st.number_input("Lambda - Before*", min_value=0.0, key="lambda_b_dashboard_tab")
+            rpm_b = st.number_input("RPM - Before*", min_value=0, key="rpm_b_dashboard_tab")
+            engine_load_b = st.number_input("Engine Load (%) - Before*", min_value=0.0, max_value=100.0, key="engine_load_b_dashboard_tab")
+        with col6:
+            st.markdown("**After Treatment**")
+            afr_a = st.number_input("AFR - After*", min_value=0.0, key="afr_a_dashboard_tab")
+            lambda_a = st.number_input("Lambda - After*", min_value=0.0, key="lambda_a_dashboard_tab")
+            rpm_a = st.number_input("RPM - After*", min_value=0, key="rpm_a_dashboard_tab")
+            engine_load_a = st.number_input("Engine Load (%) - After*", min_value=0.0, max_value=100.0, key="engine_load_a_dashboard_tab")
 
-else:  # Main Dashboard
-    # Main content based on selected page
-    if page == "Training Process":
-        st.markdown("# 🔬 Training Process")
-        st.markdown("### Research & Data Preparation")
-        
-        # File upload section
-        st.markdown("## 📁 Data Upload")
-        uploaded_file = st.file_uploader(
-            "Upload CSV containing vehicle and emissions data",
-            type=['csv'],
-            help="CSV should contain: Vehicle Info, Emissions (HC, CO, NOx, Smoke), OBD Metrics (AFR, Lambda, O₂, RPM, Engine Load)"
-        )
-        
-        if uploaded_file is not None:
+        submitted = st.form_submit_button("Save and Analyze Results", type="primary")
+
+        if submitted:
+            # Calculate reductions and improvements
+            hc_reduction = ((hc_b - hc_a) / hc_b * 100) if hc_b > 0 else 0
+            co_reduction = ((co_b - co_a) / co_b * 100) if co_b > 0 else 0
+            nox_reduction = ((nox_b - nox_a) / nox_b * 100) if nox_b > 0 else 0
+
+            # Display metrics
+            st.subheader("📈 Results Analysis")
+            met1, met2, met3 = st.columns(3)
+            with met1:
+                st.metric("HC Reduction", f"{hc_reduction:.1f}%", 
+                         f"{hc_b - hc_a:.1f} ppm")
+            with met2:
+                st.metric("CO Reduction", f"{co_reduction:.1f}%",
+                         f"{co_b - co_a:.1f} ppm")
+            with met3:
+                st.metric("NOx Reduction", f"{nox_reduction:.1f}%",
+                         f"{nox_b - nox_a:.1f} ppm")
+
+            # Create visualization
+            st.subheader("📊 Emissions Comparison")
+            emissions_data = {
+                'Parameter': ['HC (ppm)', 'CO (ppm)', 'NOx (ppm)'],
+                'Before': [hc_b, co_b, nox_b],
+                'After': [hc_a, co_a, nox_a]
+            }
+            df = pd.DataFrame(emissions_data)
+
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                name='Before',
+                x=df['Parameter'],
+                y=df['Before'],
+                marker_color='#ff6b6b'
+            ))
+            fig.add_trace(go.Bar(
+                name='After',
+                x=df['Parameter'],
+                y=df['After'],
+                marker_color='#00ff88'
+            ))
+
+            fig.update_layout(
+                title="Emissions Before vs After Treatment",
+                barmode='group',
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white',
+                showlegend=True
+            )
+
+            st.plotly_chart(fig, width="stretch")
+
+            # Save to database
             try:
-                # Load uploaded data
-                df = pd.read_csv(uploaded_file)
-                st.success(f"✅ File uploaded successfully! {len(df)} rows loaded.")
+                data = {
+                    "vehicle_model": vehicle_model,
+                    "vehicle_year": vehicle_year,
+                    "meter_reading": vehicle_meter,
+                    "vehicle_cc": vehicle_cc,
+                    "fuel_quality": fuel_quality,
+                    "fuel_brand": fuel_brand,
+                    "hc_before": hc_b,
+                    "hc_after": hc_a,
+                    "co_before": co_b,
+                    "co_after": co_a,
+                    "nox_before": nox_b,
+                    "nox_after": nox_a,
+                    "o2_before": o2_b,
+                    "o2_after": o2_a,
+                    "afr_before": afr_b,
+                    "afr_after": afr_a,
+                    "lambda_before": lambda_b,
+                    "lambda_after": lambda_a,
+                    "rpm_before": rpm_b,
+                    "rpm_after": rpm_a,
+                    "engine_load_before": engine_load_b,
+                    "engine_load_after": engine_load_a,
+                    "timestamp": datetime.now().isoformat()
+                }
                 
-                # Display dataset summary
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.markdown(create_kpi_card("Total Rows", len(df)), unsafe_allow_html=True)
-                
-                with col2:
-                    missing_values = df.isnull().sum().sum()
-                    st.markdown(create_kpi_card("Missing Values", missing_values, color="#ff6b6b"), unsafe_allow_html=True)
-                
-                with col3:
-                    numeric_cols = df.select_dtypes(include=[np.number]).columns
-                    if len(numeric_cols) > 0:
-                        min_val = df[numeric_cols].min().min()
-                        st.markdown(create_kpi_card("Min Value", f"{min_val:.2f}"), unsafe_allow_html=True)
-                
-                with col4:
-                    if len(numeric_cols) > 0:
-                        max_val = df[numeric_cols].max().max()
-                        st.markdown(create_kpi_card("Max Value", f"{max_val:.2f}"), unsafe_allow_html=True)
-                
-                # Editable data table with pagination
-                st.markdown("## 📊 Dataset Preview & Editing")
-                
-                # Pagination
-                rows_per_page = 50
-                total_pages = (len(df) - 1) // rows_per_page + 1
-                
-                if total_pages > 1:
-                    page_num = st.selectbox("Select Page", range(1, total_pages + 1))
-                    start_idx = (page_num - 1) * rows_per_page
-                    end_idx = min(start_idx + rows_per_page, len(df))
-                    df_page = df.iloc[start_idx:end_idx]
-                else:
-                    df_page = df
-                
-                # Editable dataframe
-                edited_df = st.data_editor(
-                    df_page,
-                    use_container_width=True,
-                    num_rows="dynamic",
-                    key="data_editor"
+                response = supabase.table('vehicle_measurements').insert(data).execute()
+                st.success("✅ Data saved successfully!")
+            except Exception as e:
+                st.error(f"❌ Error saving data: {str(e)}")
+
+    # Help section
+    with st.expander("ℹ️ How to Use"):
+        st.markdown("""
+        1. Fill in all required fields marked with *
+        2. Enter measurements before and after treatment
+        3. Click 'Save and Analyze Results' to:
+           - View reduction percentages
+           - See comparison charts
+           - Save data to database
+        """)
+
+elif selected_tab == "Training Process":
+    page = "Training Process"
+
+# Main content based on selected page
+if page == "Training Process":
+    st.markdown("# 🔬 Training Process")
+    st.markdown("### Research & Data Preparation")
+    
+    # File upload section
+    st.markdown("## 📁 Data Upload")
+    uploaded_file = st.file_uploader(
+        "Upload CSV containing vehicle and emissions data",
+        type=['csv'],
+        help="CSV should contain: Vehicle Info, Emissions (HC, CO, NOx, Smoke), OBD Metrics (AFR, Lambda, O₂, RPM, Engine Load)"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Load uploaded data
+            df = pd.read_csv(uploaded_file)
+            st.success(f"✅ File uploaded successfully! {len(df)} rows loaded.")
+            
+            # Display dataset summary
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.markdown(create_kpi_card("Total Rows", len(df)), unsafe_allow_html=True)
+            
+            with col2:
+                missing_values = df.isnull().sum().sum()
+                st.markdown(create_kpi_card("Missing Values", missing_values, color="#ff6b6b"), unsafe_allow_html=True)
+            
+            with col3:
+                numeric_cols = df.select_dtypes(include=[np.number]).columns
+                if len(numeric_cols) > 0:
+                    min_val = df[numeric_cols].min().min()
+                    st.markdown(create_kpi_card("Min Value", f"{min_val:.2f}"), unsafe_allow_html=True)
+            
+            with col4:
+                if len(numeric_cols) > 0:
+                    max_val = df[numeric_cols].max().max()
+                    st.markdown(create_kpi_card("Max Value", f"{max_val:.2f}"), unsafe_allow_html=True)
+            
+            # Editable data table with pagination
+            st.markdown("## 📊 Dataset Preview & Editing")
+            
+            # Pagination
+            rows_per_page = 50
+            total_pages = (len(df) - 1) // rows_per_page + 1
+            
+            if total_pages > 1:
+                page_num = st.selectbox("Select Page", range(1, total_pages + 1))
+                start_idx = (page_num - 1) * rows_per_page
+                end_idx = min(start_idx + rows_per_page, len(df))
+                df_page = df.iloc[start_idx:end_idx]
+            else:
+                df_page = df
+            
+            # Editable dataframe
+            edited_df = st.data_editor(
+                df_page,
+                width="stretch",
+                num_rows="dynamic",
+                key="data_editor"
+            )
+            
+            # Save to database
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                if st.button("💾 Save to Database", type="primary"):
+                    if save_training_data(edited_df):
+                        st.success("✅ Data saved to database successfully!")
+                    else:
+                        st.error("❌ Failed to save data to database.")
+            
+            with col2:
+                # Export options
+                csv = edited_df.to_csv(index=False)
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=csv,
+                    file_name=f"cleaned_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
                 )
+            
+            # Correlation Analysis
+            if len(df.select_dtypes(include=[np.number]).columns) > 1:
+                st.markdown("## 📈 Correlation Analysis")
                 
-                # Save to database
-                col1, col2 = st.columns([1, 1])
+                # Scatter plots with regression
+                emissions_cols = [col for col in df.columns if any(x in col.lower() for x in ['hc', 'co', 'nox', 'smoke'])]
+                obd_cols = [col for col in df.columns if any(x in col.lower() for x in ['afr', 'lambda', 'o2', 'rpm', 'load'])]
                 
-                with col1:
-                    if st.button("💾 Save to Database", type="primary"):
-                        if save_training_data(edited_df):
-                            st.success("✅ Data saved to database successfully!")
-                        else:
-                            st.error("❌ Failed to save data to database.")
-                
-                with col2:
-                    # Export options
-                    csv = edited_df.to_csv(index=False)
-                    st.download_button(
-                        label="📥 Download CSV",
-                        data=csv,
-                        file_name=f"cleaned_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
-                    )
-                
-                # Correlation Analysis
-                if len(df.select_dtypes(include=[np.number]).columns) > 1:
-                    st.markdown("## 📈 Correlation Analysis")
+                if emissions_cols and obd_cols:
+                    col1, col2 = st.columns(2)
                     
-                    # Scatter plots with regression
-                    emissions_cols = [col for col in df.columns if any(x in col.lower() for x in ['hc', 'co', 'nox', 'smoke'])]
-                    obd_cols = [col for col in df.columns if any(x in col.lower() for x in ['afr', 'lambda', 'o2', 'rpm', 'load'])]
+                    with col1:
+                        emission_col = st.selectbox("Select Emission", emissions_cols)
                     
-                    if emissions_cols and obd_cols:
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            emission_col = st.selectbox("Select Emission", emissions_cols)
-                        
-                        with col2:
-                            obd_col = st.selectbox("Select OBD Metric", obd_cols)
-                        
-                        if emission_col in df.columns and obd_col in df.columns:
-                            # Create scatter plot with regression
-                            fig = px.scatter(
-                                df, 
-                                x=obd_col, 
-                                y=emission_col,
-                                trendline="ols",
-                                title=f"{emission_col} vs {obd_col}",
-                                template="plotly_dark"
-                            )
-                            fig.update_layout(
-                                plot_bgcolor='rgba(0,0,0,0)',
-                                paper_bgcolor='rgba(0,0,0,0)',
-                                font_color='white'
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
+                    with col2:
+                        obd_col = st.selectbox("Select OBD Metric", obd_cols)
                     
-                    # Correlation heatmap
-                    st.markdown("### 🔥 Correlation Heatmap")
-                    numeric_df = df.select_dtypes(include=[np.number])
-                    if len(numeric_df.columns) > 1:
-                        corr_matrix = numeric_df.corr()
-                        
-                        fig = px.imshow(
-                            corr_matrix,
-                            text_auto=True,
-                            aspect="auto",
-                            title="Correlation Matrix: Emissions vs OBD Metrics",
-                            template="plotly_dark",
-                            color_continuous_scale="RdBu"
+                    if emission_col in df.columns and obd_col in df.columns:
+                        # Create scatter plot with regression
+                        fig = px.scatter(
+                            df, 
+                            x=obd_col, 
+                            y=emission_col,
+                            trendline="ols",
+                            title=f"{emission_col} vs {obd_col}",
+                            template="plotly_dark"
                         )
                         fig.update_layout(
                             plot_bgcolor='rgba(0,0,0,0)',
@@ -476,417 +574,96 @@ else:  # Main Dashboard
                             font_color='white'
                         )
                         st.plotly_chart(fig, use_container_width=True)
+                
+                # Correlation heatmap
+                st.markdown("### 🔥 Correlation Heatmap")
+                numeric_df = df.select_dtypes(include=[np.number])
+                if len(numeric_df.columns) > 1:
+                    corr_matrix = numeric_df.corr()
+                    
+                    fig = px.imshow(
+                        corr_matrix,
+                        text_auto=True,
+                        aspect="auto",
+                        title="Correlation Matrix: Emissions vs OBD Metrics",
+                        template="plotly_dark",
+                        color_continuous_scale="RdBu"
+                    )
+                    fig.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        font_color='white'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
             
-            except Exception as e:
-                st.error(f"❌ Error processing file: {str(e)}")
+        except Exception as e:
+            st.error(f"❌ Error processing file: {str(e)}")
+    
+    # Load existing data from database
+    st.markdown("## 🗄️ Existing Training Data")
+    existing_data = load_training_data()
+    
+    if not existing_data.empty:
+        st.info(f"📊 {len(existing_data)} records found in database")
         
-        # Load existing data from database
-        st.markdown("## 🗄️ Existing Training Data")
-        existing_data = load_training_data()
-        
-        if not existing_data.empty:
-            st.info(f"📊 {len(existing_data)} records found in database")
-            
-            # Show summary of existing data
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.markdown(create_kpi_card("Total Records", len(existing_data)), unsafe_allow_html=True)
-            
-            with col2:
-                unique_models = existing_data['vehicle_model'].nunique() if 'vehicle_model' in existing_data.columns else 0
-                st.markdown(create_kpi_card("Vehicle Models", unique_models), unsafe_allow_html=True)
-            
-            with col3:
-                date_range = "N/A"
-                if 'created_at' in existing_data.columns:
-                    try:
-                        dates = pd.to_datetime(existing_data['created_at'])
-                        date_range = f"{dates.min().strftime('%Y-%m-%d')} to {dates.max().strftime('%Y-%m-%d')}"
-                    except:
-                        pass
-                st.markdown(create_kpi_card("Date Range", date_range), unsafe_allow_html=True)
-            
-            # Preview existing data
-            if st.checkbox("Show existing data preview"):
-                st.dataframe(existing_data.head(10), use_container_width=True)
-        else:
-            st.info("📝 No training data found in database. Upload CSV files to get started.")
-
-    elif page == "Prediction Process":
-        st.markdown("# 🔮 Prediction Process")
-        st.markdown("### Vehicle Emissions Prediction")
-        
-        # Load training data for predictions
-        training_data = load_training_data()
-        
-        # Vehicle input form
-        st.markdown("## 🚗 Vehicle Information")
-        
-        col1, col2 = st.columns(2)
+        # Show summary of existing data
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            vehicle_model = st.text_input("Vehicle Model", placeholder="e.g., Toyota Camry")
-            vehicle_year = st.number_input("Vehicle Year", min_value=1990, max_value=2024, value=2020)
-            engine_cc = st.number_input("Engine CC", min_value=800, max_value=8000, value=2000)
+            st.markdown(create_kpi_card("Total Records", len(existing_data)), unsafe_allow_html=True)
         
         with col2:
-            odometer_reading = st.number_input("Odometer Reading (km)", min_value=0, max_value=500000, value=50000)
-            fuel_quality = st.selectbox("Fuel Quality", ["Premium", "Regular", "Super"])
-            fuel_brand = st.text_input("Fuel Brand", placeholder="e.g., Shell, BP, Exxon")
+            unique_models = existing_data['vehicle_model'].nunique() if 'vehicle_model' in existing_data.columns else 0
+            st.markdown(create_kpi_card("Vehicle Models", unique_models), unsafe_allow_html=True)
         
-        if st.button("🔍 Generate Prediction", type="primary"):
-            if vehicle_model and fuel_brand:
-                # Prepare vehicle data
-                vehicle_data = {
-                    'vehicle_model': vehicle_model,
-                    'vehicle_year': vehicle_year,
-                    'engine_cc': engine_cc,
-                    'odometer_reading': odometer_reading,
-                    'fuel_quality': fuel_quality,
-                    'fuel_brand': fuel_brand
-                }
-                
-                # Generate predictions
-                predictions = predict_emissions(vehicle_data, training_data)
-                
-                # Display KPI cards
-                st.markdown("## 📊 Prediction Results")
-                
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.markdown(create_kpi_card(
-                        "Cleaning Time", 
-                        predictions['cleaning_time'], 
-                        " mins",
-                        "#00ff88"
-                    ), unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown(create_kpi_card(
-                        "CO₂ Equivalent Saved", 
-                        predictions['co2_saved'], 
-                        " g/km",
-                        "#007bff"
-                    ), unsafe_allow_html=True)
-                
-                with col3:
-                    avg_reduction = (predictions['hc_reduction'] + predictions['co_reduction'] + 
-                                   predictions['nox_reduction'] + predictions['particulates_reduction']) / 4
-                    st.markdown(create_kpi_card(
-                        "Avg. Reduction", 
-                        f"{avg_reduction:.1f}", 
-                        "%",
-                        "#ffa500"
-                    ), unsafe_allow_html=True)
-                
-                # Emissions reduction chart
-                st.markdown("## 📈 Emissions Reduction Analysis")
-                
-                # Before vs After bar chart
-                emissions = ['HC (ppm)', 'CO (ppm)', 'NOx (ppm)', 'Particulates (mg/m³)']
-                before_values = [100, 100, 100, 100]  # Baseline 100%
-                after_values = [
-                    100 - predictions['hc_reduction'],
-                    100 - predictions['co_reduction'],
-                    100 - predictions['nox_reduction'],
-                    100 - predictions['particulates_reduction']
-                ]
-                
-                fig = go.Figure(data=[
-                    go.Bar(name='Before Cleaning', x=emissions, y=before_values, marker_color='#ff6b6b'),
-                    go.Bar(name='After Cleaning', x=emissions, y=after_values, marker_color='#00ff88')
-                ])
-                
-                fig.update_layout(
-                    title='Before vs After Emissions Comparison',
-                    xaxis_title='Emission Type',
-                    yaxis_title='Relative Level (%)',
-                    barmode='group',
-                    template='plotly_dark',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    font_color='white'
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Real-time style chart (simulated RPM vs HC)
-                st.markdown("## ⚡ Real-time Simulation: RPM vs HC Levels")
-                
-                # Generate simulated real-time data
-                rpm_values = np.linspace(800, 6000, 50)
-                hc_before = 150 + (rpm_values - 800) * 0.02 + np.random.normal(0, 10, 50)
-                hc_after = hc_before * (1 - predictions['hc_reduction']/100)
-                
-                fig = go.Figure()
-                
-                fig.add_trace(go.Scatter(
-                    x=rpm_values, 
-                    y=hc_before,
-                    mode='lines+markers',
-                    name='Before Cleaning',
-                    line=dict(color='#ff6b6b', width=3),
-                    marker=dict(size=6)
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=rpm_values, 
-                    y=hc_after,
-                    mode='lines+markers',
-                    name='After Cleaning',
-                    line=dict(color='#00ff88', width=3),
-                    marker=dict(size=6)
-                ))
-                
-                fig.update_layout(
-                    title='RPM vs HC Emissions (Real-time Simulation)',
-                    xaxis_title='RPM',
-                    yaxis_title='HC Levels (ppm)',
-                    template='plotly_dark',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    font_color='white'
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Save prediction and export options
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    if st.button("💾 Save Prediction"):
-                        prediction_record = {
-                            **vehicle_data,
-                            'predicted_cleaning_time': predictions['cleaning_time'],
-                            'predicted_hc_reduction': predictions['hc_reduction'],
-                            'predicted_co_reduction': predictions['co_reduction'],
-                            'predicted_nox_reduction': predictions['nox_reduction'],
-                            'predicted_particulates_reduction': predictions['particulates_reduction'],
-                            'co2_equivalent_saved': predictions['co2_saved']
-                        }
-                        
-                        if save_prediction(prediction_record):
-                            st.success("✅ Prediction saved successfully!")
-                        else:
-                            st.error("❌ Failed to save prediction.")
-                
-                with col2:
-                    # Export CSV
-                    export_data = pd.DataFrame([{
-                        **vehicle_data,
-                        **predictions
-                    }])
-                    csv = export_data.to_csv(index=False)
-                    st.download_button(
-                        label="📥 Export CSV",
-                        data=csv,
-                        file_name=f"prediction_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
-                    )
-                
-                with col3:
-                    # Export Excel
-                    buffer = io.BytesIO()
-                    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                        export_data.to_excel(writer, sheet_name='Prediction', index=False)
-                    
-                    st.download_button(
-                        label="📊 Export Excel",
-                        data=buffer.getvalue(),
-                        file_name=f"prediction_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
-            
-            else:
-                st.error("❌ Please fill in all required fields (Vehicle Model and Fuel Brand)")
+        with col3:
+            date_range = "N/A"
+            if 'created_at' in existing_data.columns:
+                try:
+                    dates = pd.to_datetime(existing_data['created_at'])
+                    date_range = f"{dates.min().strftime('%Y-%m-%d')} to {dates.max().strftime('%Y-%m-%d')}"
+                except:
+                    pass
+            st.markdown(create_kpi_card("Date Range", date_range), unsafe_allow_html=True)
+        
+        # Preview existing data
+        if st.checkbox("Show existing data preview"):
+            st.dataframe(existing_data.head(10), use_container_width=True)
+    else:
+        st.info("📝 No training data found in database. Upload CSV files to get started.")
 
-        else:  # Reports & Analytics
-            st.markdown("# 📊 Reports & Analytics")
-            st.markdown("### Comprehensive Data Analysis")
-            
-            # Load data
-            training_data = load_training_data()
-            
-            try:
-                predictions_response = supabase.table('predictions').select('*').execute()
-                predictions_data = pd.DataFrame(predictions_response.data) if predictions_response.data else pd.DataFrame()
-            except:
-                predictions_data = pd.DataFrame()
-            
-            # Summary metrics
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.markdown(create_kpi_card("Training Records", len(training_data)), unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown(create_kpi_card("Predictions Made", len(predictions_data)), unsafe_allow_html=True)
-            
-            with col3:
-                if not predictions_data.empty and 'predicted_cleaning_time' in predictions_data.columns:
-                    avg_cleaning_time = predictions_data['predicted_cleaning_time'].mean()
-                    st.markdown(create_kpi_card("Avg Cleaning Time", f"{avg_cleaning_time:.1f}", " mins"), unsafe_allow_html=True)
-                else:
-                    st.markdown(create_kpi_card("Avg Cleaning Time", "N/A"), unsafe_allow_html=True)
-            
-            with col4:
-                if not predictions_data.empty and 'co2_equivalent_saved' in predictions_data.columns:
-                    total_co2_saved = predictions_data['co2_equivalent_saved'].sum()
-                    st.markdown(create_kpi_card("Total CO₂ Saved", f"{total_co2_saved:.1f}", " g/km"), unsafe_allow_html=True)
-                else:
-                    st.markdown(create_kpi_card("Total CO₂ Saved", "N/A"), unsafe_allow_html=True)
-            
-            # Analytics charts
-            if not predictions_data.empty:
-                st.markdown("## 📈 Prediction Analytics")
-                
-                # Predictions over time
-                if 'created_at' in predictions_data.columns:
-                    predictions_data['created_at'] = pd.to_datetime(predictions_data['created_at'])
-                    daily_predictions = predictions_data.groupby(predictions_data['created_at'].dt.date).size().reset_index()
-                    daily_predictions.columns = ['date', 'count']
-                    
-                    fig = px.line(
-                        daily_predictions, 
-                        x='date', 
-                        y='count',
-                        title='Predictions Over Time',
-                        template='plotly_dark'
-                    )
-                    fig.update_layout(
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        font_color='white'
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Vehicle model distribution
-                if 'vehicle_model' in predictions_data.columns:
-                    model_counts = predictions_data['vehicle_model'].value_counts().head(10)
-                    
-                    fig = px.bar(
-                        x=model_counts.values,
-                        y=model_counts.index,
-                        orientation='h',
-                        title='Top 10 Vehicle Models Analyzed',
-                        template='plotly_dark'
-                    )
-                    fig.update_layout(
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        font_color='white'
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Emissions reduction distribution
-                reduction_cols = ['predicted_hc_reduction', 'predicted_co_reduction', 
-                                 'predicted_nox_reduction', 'predicted_particulates_reduction']
-                
-                available_cols = [col for col in reduction_cols if col in predictions_data.columns]
-                
-                if available_cols:
-                    fig = go.Figure()
-                    
-                    for col in available_cols:
-                        fig.add_trace(go.Box(
-                            y=predictions_data[col],
-                            name=col.replace('predicted_', '').replace('_reduction', '').upper(),
-                            boxpoints='outliers'
-                        ))
-                    
-                    fig.update_layout(
-                        title='Emissions Reduction Distribution',
-                        yaxis_title='Reduction Percentage (%)',
-                        template='plotly_dark',
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        font_color='white'
-                    )
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-            
-            else:
-                st.info("📝 No prediction data available yet. Make some predictions to see analytics!")
-            
-            # Training data analytics
-            if not training_data.empty:
-                st.markdown("## 🔬 Training Data Analytics")
-                
-                numeric_cols = training_data.select_dtypes(include=[np.number]).columns
-                
-                if len(numeric_cols) > 0:
-                    # Statistical summary
-                    st.markdown("### 📊 Statistical Summary")
-                    st.dataframe(training_data[numeric_cols].describe(), use_container_width=True)
-                    
-                    # Distribution plots
-                    if len(numeric_cols) >= 2:
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            selected_col1 = st.selectbox("Select variable for distribution", numeric_cols, key="dist1")
-                        
-                        with col2:
-                            selected_col2 = st.selectbox("Select variable for comparison", numeric_cols, key="dist2")
-                        
-                        if selected_col1 and selected_col2:
-                            col1, col2 = st.columns(2)
-                            
-                            with col1:
-                                fig = px.histogram(
-                                    training_data, 
-                                    x=selected_col1,
-                                    title=f'Distribution of {selected_col1}',
-                                    template='plotly_dark'
-                                )
-                                fig.update_layout(
-                                    plot_bgcolor='rgba(0,0,0,0)',
-                                    paper_bgcolor='rgba(0,0,0,0)',
-                                    font_color='white'
-                                )
-                                st.plotly_chart(fig, use_container_width=True)
-                            
-                            with col2:
-                                fig = px.scatter(
-                                    training_data, 
-                                    x=selected_col1, 
-                                    y=selected_col2,
-                                    title=f'{selected_col1} vs {selected_col2}',
-                                    template='plotly_dark'
-                                )
-                                fig.update_layout(
-                                    plot_bgcolor='rgba(0,0,0,0)',
-                                    paper_bgcolor='rgba(0,0,0,0)',
-                                    font_color='white'
-                                )
-                                st.plotly_chart(fig, use_container_width=True)
-        
-        # Export all data
-        st.markdown("## 📥 Export Options")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if not training_data.empty:
-                csv_training = training_data.to_csv(index=False)
-                st.download_button(
-                    label="📊 Export Training Data (CSV)",
-                    data=csv_training,
-                    file_name=f"training_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
-                )
-        
-        with col2:
-            if not predictions_data.empty:
-                csv_predictions = predictions_data.to_csv(index=False)
-                st.download_button(
-                    label="🔮 Export Predictions (CSV)",
-                    data=csv_predictions,
-                    file_name=f"predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
-                )
+elif page == "Vehicle Dashboard":
+    pass  # Vehicle Dashboard is already defined in the selected_tab section
+
+else:  # Main Dashboard
+    st.title("Main Dashboard")
+    st.markdown("Welcome to the Environmental Engineering Dashboard.")
+    st.markdown("Use the sidebar to navigate between different sections.")
+    st.markdown("### Quick Insights")
+    
+    # Sample KPIs
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(create_kpi_card("Total Vehicles Analyzed", "1,250"), unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(create_kpi_card("Average CO₂ Saved per Vehicle", "120 g/km"), unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(create_kpi_card("Total Cleaning Sessions", "3,500"), unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("### Latest Predictions")
+    
+    # Sample table of latest predictions
+    sample_predictions = pd.DataFrame({
+        'Vehicle Model': ['Toyota Camry', 'Honda Accord', 'Ford Focus'],
+        'Predicted Cleaning Time (mins)': [45, 50, 40],
+        'CO₂ Equivalent Saved (g/km)': [130, 110, 150]
+    })
+    
+    st.dataframe(sample_predictions, use_container_width=True)
 
 # Footer
 st.markdown("---")
